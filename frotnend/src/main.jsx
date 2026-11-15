@@ -8,10 +8,9 @@ import AuthInitializer from "./features/auth/AuthInitializer";
 
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>
-    <AuthInitializer>
-    <App />
-    <Toaster/>
-  </AuthInitializer>
-
+      <AuthInitializer>
+        <App />
+        <Toaster />
+      </AuthInitializer>
   </Provider>,
 );
