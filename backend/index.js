@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 import connectDb from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
+import agentRoutes from "./routes/agent.routes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
+app.use("/api/agents", agentRoutes);
 
 const startServer = async () => {
   try {
