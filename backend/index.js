@@ -1,12 +1,13 @@
 
 import express from "express";
 import dotenv from "dotenv";
+dotenv.config();
 import connectDb from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import agentRoutes from "./routes/agent.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -25,6 +26,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/agents", agentRoutes);
+app.use("/api/chat", chatRoutes);
 
 const startServer = async () => {
   try {

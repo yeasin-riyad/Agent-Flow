@@ -46,3 +46,42 @@ export const chatAgent = async (req, res) => {
     });
   }
 };
+
+
+// Get all messages from the current user's conversation
+export const getAllChats = async (req, res) => {
+  try {
+    const threadId = String(req.user._id);
+
+    const state = await chatGraph.getState({
+      configurable: {
+        thread_id: threadId,
+      },
+    });
+
+    const messages = state.values?.messages || [];
+
+    const formattedMessages = messages.map((message, index) => ({
+      id: message.id || `${threadId}-${index}`,
+      role:
+        message.getType?.() === "human"
+          ? "user"
+          : message.getType?.() === "ai"
+            ? "assistant"
+            : "system",
+      content: message.content,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      messages: formattedMessages,
+    });
+  } catch (error) {
+    console.error("Get All Chats Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve chat history.",
+    });
+  }
+};

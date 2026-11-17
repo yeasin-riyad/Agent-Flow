@@ -16,7 +16,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/agents" element={<Agents />} />
         <Route path="/integrations" element={<Integration />} />
-                <Route path="/agents/new" element={<CreateAgent />} />
+                <Route path="/agents/create" element={<CreateAgent />} />
 
       </Route>
       </Routes>

@@ -1,283 +1,153 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { RotateCcw, Sparkles, LoaderCircle } from "lucide-react";
+
+import HomeHeader from "@/components/layout/HomeHeader";
+import ChatWindow from "@/components/chat/ChatWindow";
+import ChatInput from "@/components/chat/ChatInput";
 
 import {
-  Workflow,
-  Menu,
-  X,
-  LayoutDashboard,
-  UserRound,
-  CreditCard,
-  LogOut,
-  ChevronDown,
-  Bot,
-  Plus,
-  Settings2,
-} from "lucide-react";
+  sendChatMessage,
+  getAllChats,
+} from "@/features/chat/chatThunks";
 
-import { Button } from "@/components/ui/button";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-import { logoutUser } from "@/features/auth/authThunks";
-import { toast } from "sonner";
+import { clearChat } from "@/features/chat/chatSlice";
 
 const Home = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const { user } = useSelector((state) => state.auth);
 
-  const getInitials = () => {
-    if (!user?.name) return "U";
+  const {
+    messages,
+    loading,
+    historyLoading,
+    error,
+  } = useSelector((state) => state.chat);
 
-    return user.name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
-  };
+  const hasMessages = messages.length > 0;
+  const showWelcome = !historyLoading && !hasMessages;
 
-  const handleLogout = async () => {
-    try {
-      await dispatch(logoutUser()).unwrap();
-      toast.success("Logged out successfully");
-    } catch (error) {
-      toast.error(error || "Logout failed");
-    } finally {
-      navigate("/login", { replace: true });
+  useEffect(() => {
+    if (user?._id) {
+      dispatch(getAllChats());
     }
+  }, [dispatch, user?._id]);
+
+  const handleSendMessage = (message) => {
+    dispatch(sendChatMessage(message));
   };
 
-  const goTo = (path) => {
-    setMobileMenuOpen(false);
-    navigate(path);
+  const handleClearChat = () => {
+    if (loading || !hasMessages) return;
+
+    dispatch(clearChat());
   };
 
   return (
-    <div className="min-h-screen bg-[#080B16] text-white">
-      {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#080B16]/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
-          {/* LOGO */}
-          <Link to="/" className="group flex shrink-0 items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-blue-600 shadow-lg shadow-violet-500/20 transition-transform group-hover:scale-105">
-              <Workflow size={22} />
+<div className="flex h-dvh w-full flex-col overflow-hidden bg-[#080B16] text-white lg:flex-row">
+      {/* Header */}
+      <HomeHeader />
+
+      {/* Main Content */}
+  <main className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col px-3 pt-4 sm:px-6 lg:ml-64 lg:px-10 lg:pt-6">
+
+        {/* Welcome Section - Only when there are no messages */}
+        {showWelcome && (
+          <section className="mb-4 flex shrink-0 flex-wrap items-center justify-between gap-3 sm:mb-5 sm:gap-4">
+
+            <div className="min-w-0">
+              <div className="mb-1.5 flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.2em] text-violet-400 sm:text-xs">
+                <Sparkles size={14} />
+                Your AI Workspace
+              </div>
+
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl lg:text-3xl">
+                Welcome back,{" "}
+                <span className="text-violet-400">
+                  {user?.name?.split(" ")[0] || "User"}
+                </span>
+              </h1>
+
+              <p className="mt-1 text-xs text-slate-400 sm:text-sm">
+                Ask questions, explore ideas, and automate your workflow.
+              </p>
             </div>
 
-            <span className="text-xl font-bold tracking-tight">
-              Agent<span className="text-violet-400">Flow</span>
-            </span>
-          </Link>
-
-          {/* DESKTOP USER DROPDOWN */}
-          <div className="hidden items-center md:flex">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="outline"
-                    className="h-11 gap-2 border-white/10 bg-white/[0.04] px-3 text-white hover:bg-white/10 hover:text-white"
-                  />
-                }
-              >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-blue-600 text-xs font-bold">
-                  {getInitials()}
-                </div>
-
-                <span className="max-w-32 truncate text-sm">
-                  {user?.name || "My Account"}
-                </span>
-
-                <ChevronDown size={15} />
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="end"
-                className="w-60 border-white/10 bg-[#111729] text-white"
-              >
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={() => navigate("/agents")}>
-                    <Bot className="mr-2 h-4 w-4" />
-                    My Agents
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={() => navigate("/agents/new")}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create New Agent
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={() => navigate("/integrations")}>
-                    <Settings2 className="mr-2 h-4 w-4" />
-                    Integration
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator className="bg-white/10" />
-
-                  <DropdownMenuItem onClick={() => navigate("/profile")}>
-                    <UserRound className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={() => navigate("/billing")}>
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Billing
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator className="bg-white/10" />
-
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className="cursor-pointer text-red-400 focus:bg-red-500/10 focus:text-red-400"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* MOBILE ACTIONS */}
-          <div className="flex items-center gap-2 md:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 rounded-xl border-white/10 bg-white/[0.04] text-white hover:bg-white/10 hover:text-white"
-                  />
-                }
-              >
-                <span className="text-xs font-bold">{getInitials()}</span>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="end"
-                className="w-56 border-white/10 bg-[#111729] text-white"
-              >
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel className="text-slate-400">
-                    {user?.name || "My Account"}
-                  </DropdownMenuLabel>
-
-                  <DropdownMenuSeparator className="bg-white/10" />
-
-                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={() => navigate("/agents")}>
-                    <Bot className="mr-2 h-4 w-4" />
-                    My Agents
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={() => navigate("/agents/new")}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create New Agent
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={() => navigate("/integrations")}>
-                    <Settings2 className="mr-2 h-4 w-4" />
-                    Integration
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={() => navigate("/profile")}>
-                    <UserRound className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={() => navigate("/billing")}>
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Billing
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator className="bg-white/10" />
-
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className="text-red-400 focus:text-red-400"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMobileMenuOpen((previous) => !previous)}
-              className="h-10 w-10 text-white hover:bg-white/10"
-              aria-label="Toggle navigation menu"
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-            </Button>
-          </div>
-        </div>
-
-        {/* MOBILE NAVIGATION */}
-        {mobileMenuOpen && (
-          <div className="border-t border-white/[0.08] bg-[#0D1222] px-5 py-4 md:hidden">
-            <nav className="flex flex-col gap-1">
-              <button
-                onClick={() => goTo("/")}
-                className="rounded-lg px-4 py-3 text-left text-sm text-slate-300 hover:bg-white/5"
-              >
-                Home
-              </button>
-
-              <button
-                onClick={() => goTo("/agents")}
-                className="rounded-lg px-4 py-3 text-left text-sm text-slate-300 hover:bg-white/5"
-              >
-                My Agents
-              </button>
-
-              <button
-                onClick={() => goTo("/integrations")}
-                className="rounded-lg px-4 py-3 text-left text-sm text-slate-300 hover:bg-white/5"
-              >
-                Integrations
-              </button>
-            </nav>
-          </div>
+          </section>
         )}
-      </header>
 
-      {/* HOME PAGE CONTENT */}
-      <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
-        <h1 className="text-3xl font-bold">
-          Welcome back,{" "}
-          <span className="text-violet-400">
-            {user?.name?.split(" ")[0] || "User"}
-          </span>
-        </h1>
+        {/* Chat Workspace */}
+        <section className="mb-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-[#0C1120] shadow-2xl shadow-black/20 sm:mb-5 sm:rounded-2xl">
 
-        <p className="mt-2 text-slate-400">
-          Manage your AI agents and automations from one place.
-        </p>
+          {/* Chat Header */}
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/[0.08] px-3 py-3 sm:px-5 sm:py-4">
+
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-blue-600 shadow-lg shadow-violet-500/20 sm:h-10 sm:w-10 sm:rounded-xl">
+                <Sparkles size={18} />
+              </div>
+
+              <div className="min-w-0">
+                <h2 className="truncate text-xs font-semibold text-white sm:text-sm">
+                  AgentFlow Assistant
+                </h2>
+
+                <div className="mt-1 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <span className="text-[10px] text-slate-500 sm:text-[11px]">
+                    Ready to help
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+
+              {hasMessages && (
+                <button
+                  onClick={handleClearChat}
+                  disabled={loading}
+                  title="Clear messages from screen"
+                  className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2 text-[10px] font-medium text-slate-300 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:px-3 sm:text-xs"
+                >
+                  <RotateCcw size={13} />
+                  <span className="hidden sm:inline">Clear screen</span>
+                </button>
+              )}
+
+              <span className="rounded-full border border-violet-400/20 bg-violet-500/10 px-2 py-1 text-[9px] font-medium text-violet-300 sm:px-3 sm:text-[10px]">
+                AI CHAT
+              </span>
+            </div>
+          </div>
+
+          {/* Chat Messages */}
+          {historyLoading ? (
+            <div className="flex flex-1 items-center justify-center">
+              <LoaderCircle
+                size={25}
+                className="animate-spin text-violet-400"
+              />
+            </div>
+          ) : (
+            <ChatWindow
+              messages={messages}
+              loading={loading}
+              error={error}
+              onSuggestionClick={handleSendMessage}
+            />
+          )}
+
+          {/* Chat Input */}
+          <div className="shrink-0">
+            <ChatInput
+              onSend={handleSendMessage}
+              loading={loading || historyLoading}
+            />
+          </div>
+        </section>
       </main>
     </div>
   );
