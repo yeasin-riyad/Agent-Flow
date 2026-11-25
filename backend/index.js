@@ -8,6 +8,7 @@ import agentRoutes from "./routes/agent.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import { getMcpTools } from "./mcp/mcpClient.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -27,6 +28,10 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/agents", agentRoutes);
 app.use("/api/chat", chatRoutes);
+
+const tools = await getMcpTools();
+
+console.log("Available MCP Tools:", tools);
 
 const startServer = async () => {
   try {
