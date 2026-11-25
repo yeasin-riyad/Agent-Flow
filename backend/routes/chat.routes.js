@@ -1,13 +1,25 @@
 import express from "express";
-import { agentChat, chatAgent, getAllChats } from "../controllers/chat.controller.js";
+import {
+  chatAgent,
+  agentChat,
+  getAllChats,
+  getAgentChats,
+  resumeAgentChat,
+} from "../controllers/chat.controller.js";
 import { isAuthenticated } from "../middlewares/auth.middleware.js";
+
+
 
 const router = express.Router();
 
 router.post("/", isAuthenticated, chatAgent);
-router.post("/agent", isAuthenticated, agentChat);
 
 router.get("/", isAuthenticated, getAllChats);
 
+router.post("/agent", isAuthenticated, agentChat);
+
+router.get("/agent/:agentId", isAuthenticated, getAgentChats);
+
+router.post("/agent/resume", isAuthenticated, resumeAgentChat);
 
 export default router;
