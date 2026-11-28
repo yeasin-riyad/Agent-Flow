@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Agents from "./pages/Agents";
 import Integration from "./pages/Integration";
 import CreateAgent from "./pages/CreateAgent";
+import AgentChat from "./pages/AgentChat";
 
 function App() {
   return (
@@ -16,7 +17,9 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/agents" element={<Agents />} />
         <Route path="/integrations" element={<Integration />} />
-                <Route path="/agents/create" element={<CreateAgent />} />
+        <Route path="/agents/create" element={<CreateAgent />} />
+        <Route path="/agents/:agentId/chat" element={<AgentChat />}
+/>
 
       </Route>
       </Routes>

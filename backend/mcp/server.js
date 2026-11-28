@@ -25,7 +25,7 @@ const createMcpServer = () => {
   });
 
   server.registerTool(
-    "web_search",
+    "web.search",
     {
       description:
         "Search the web for current information, tutorials, and news.",

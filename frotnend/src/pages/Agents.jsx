@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +31,7 @@ import {
   Mail,
   Send,
   FileText,
+  MessageCircle,
 } from "lucide-react";
 
 const toolDetails = {
@@ -73,9 +73,7 @@ const Agents = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { agents = [], loading, error } = useSelector(
-    (state) => state.agents
-  );
+  const { agents = [], loading, error } = useSelector((state) => state.agents);
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -115,9 +113,7 @@ const Agents = () => {
       await dispatch(toggleAgentStatus(agent._id)).unwrap();
     } catch (err) {
       setActionError(
-        typeof err === "string"
-          ? err
-          : "Failed to update agent status."
+        typeof err === "string" ? err : "Failed to update agent status.",
       );
     } finally {
       setActionLoadingId(null);
@@ -127,7 +123,7 @@ const Agents = () => {
   // DELETE AGENT
   const handleDeleteAgent = async (agent) => {
     const confirmed = window.confirm(
-      `Are you sure you want to delete "${agent.name}"? This action cannot be undone.`
+      `Are you sure you want to delete "${agent.name}"? This action cannot be undone.`,
     );
 
     if (!confirmed) return;
@@ -138,11 +134,7 @@ const Agents = () => {
     try {
       await dispatch(deleteAgent(agent._id)).unwrap();
     } catch (err) {
-      setActionError(
-        typeof err === "string"
-          ? err
-          : "Failed to delete agent."
-      );
+      setActionError(typeof err === "string" ? err : "Failed to delete agent.");
     } finally {
       setActionLoadingId(null);
     }
@@ -156,7 +148,6 @@ const Agents = () => {
       {/* MAIN CONTENT */}
       <main className="min-h-dvh lg:ml-64">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
-
           {/* PAGE INTRO */}
           <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
@@ -193,7 +184,6 @@ const Agents = () => {
 
           {/* STATISTICS */}
           <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-
             {/* TOTAL */}
             <div className="rounded-2xl border border-white/[0.08] bg-[#0D1222] p-5">
               <div className="flex items-center justify-between">
@@ -297,9 +287,7 @@ const Agents = () => {
                 Couldn't load your agents
               </p>
 
-              <p className="mt-2 text-sm text-slate-400">
-                {error}
-              </p>
+              <p className="mt-2 text-sm text-slate-400">{error}</p>
 
               <Button
                 onClick={() => dispatch(fetchAgents())}
@@ -330,13 +318,11 @@ const Agents = () => {
                 <Bot size={30} className="text-violet-400" />
               </div>
 
-              <h2 className="text-xl font-semibold">
-                No agents yet
-              </h2>
+              <h2 className="text-xl font-semibold">No agents yet</h2>
 
               <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-400">
-                Create your first AI agent and start automating your
-                everyday tasks.
+                Create your first AI agent and start automating your everyday
+                tasks.
               </p>
 
               <Button
@@ -354,9 +340,7 @@ const Agents = () => {
             <div className="rounded-2xl border border-white/[0.08] bg-[#0D1222] px-5 py-14 text-center">
               <Search size={28} className="mx-auto mb-4 text-slate-500" />
 
-              <h2 className="font-semibold text-white">
-                No agents found
-              </h2>
+              <h2 className="font-semibold text-white">No agents found</h2>
 
               <p className="mt-2 text-sm text-slate-400">
                 Try another search or change your filter.
@@ -400,9 +384,7 @@ const Agents = () => {
                       >
                         <span
                           className={`h-1.5 w-1.5 rounded-full ${
-                            agent.isActive
-                              ? "bg-emerald-400"
-                              : "bg-slate-500"
+                            agent.isActive ? "bg-emerald-400" : "bg-slate-500"
                           }`}
                         />
                         {agent.isActive ? "Active" : "Inactive"}
@@ -458,7 +440,20 @@ const Agents = () => {
                     </div>
 
                     {/* ACTIONS */}
+
+                    {/* ACTIONS */}
                     <div className="flex items-center gap-2">
+                      {/* OPEN CHAT BUTTON */}
+                      <Button
+                        type="button"
+                        onClick={() => navigate(`/agents/${agent._id}/chat`)}
+                        className="h-10 flex-1 gap-2 bg-violet-600 text-white hover:bg-violet-500"
+                      >
+                        <MessageCircle size={16} />
+                        Open Chat
+                      </Button>
+
+                      {/* TOGGLE STATUS */}
                       <Button
                         type="button"
                         disabled={isBusy}
@@ -479,6 +474,7 @@ const Agents = () => {
                             : "Activate"}
                       </Button>
 
+                      {/* DELETE AGENT */}
                       <Button
                         type="button"
                         variant="outline"
