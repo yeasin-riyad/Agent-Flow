@@ -246,29 +246,31 @@ export const getAgentChats = async (req, res) => {
 };
 
 
-
-
-
 export const resumeAgentChat = async (req, res) => {
   try {
     const { agentId, approved } = req.body;
 
-    if (
-      !mongoose.isValidObjectId(agentId) ||
-      typeof approved !== "boolean"
-    ) {
+    // 1. Validate request
+    if (!agentId || !mongoose.isValidObjectId(agentId)) {
       return res.status(400).json({
         success: false,
-        message: "Valid agentId and approval decision are required.",
+        message: "Valid agent ID is required.",
       });
     }
 
-    const userId = req.user._id;
+    if (typeof approved !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "Approval decision must be true or false.",
+      });
+    }
 
-    // Verify ownership again
+    const userId = String(req.user._id);
+
+    // 2. Verify agent ownership
     const agent = await Agent.findOne({
       _id: agentId,
-      userId,
+      userId: req.user._id,
     });
 
     if (!agent) {
@@ -278,23 +280,53 @@ export const resumeAgentChat = async (req, res) => {
       });
     }
 
-    const graph = await createAgentGraph(agent, userId);
-
+    // 3. Generate the original thread ID
     const threadId = `${userId}_${agent._id}`;
 
-    const result = await graph.invoke(
-      new Command({
-        resume: { approved },
-      }),
-      {
-        configurable: {
-          thread_id: threadId,
-        },
-      }
+    const config = {
+      configurable: {
+        thread_id: threadId,
+      },
+    };
+
+    // 4. Recreate the same graph
+    // It must use the same persistent checkpointer.
+    const graph = await createAgentGraph(agent, userId);
+
+    // 5. Retrieve current checkpoint state
+    const snapshot = await graph.getState(config);
+
+    // 6. Find pending interrupts
+    const pendingInterrupts = (snapshot.tasks || [])
+      .flatMap((task) => task.interrupts || []);
+
+    // 7. Verify this is actually a pending approval
+    const pendingApproval = pendingInterrupts.find(
+      (item) =>
+        item.value?.type === "tool_approval" &&
+        item.value?.agentId === String(agent._id) &&
+        item.value?.userId === userId
     );
 
-    // Another approval may be required if the agent
-    // requests a different write action.
+    if (!pendingApproval) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "No pending approval found. This action may already be processed.",
+      });
+    }
+
+    // 8. Resume the interrupted workflow
+    const result = await graph.invoke(
+      new Command({
+        resume: {
+          approved,
+        },
+      }),
+      config
+    );
+
+    // 9. Check if another approval is required
     if (result.__interrupt__?.length) {
       return res.status(200).json({
         success: true,
@@ -303,11 +335,15 @@ export const resumeAgentChat = async (req, res) => {
       });
     }
 
+    // 10. Get final AI response
+    const lastMessage = result.messages?.at(-1);
+
     return res.status(200).json({
       success: true,
       requiresApproval: false,
-      aiMessage: result.messages?.at(-1)?.content ?? "",
+      aiMessage: lastMessage?.content ?? "",
     });
+
   } catch (error) {
     console.error("Resume Agent Chat Error:", error);
 
@@ -317,3 +353,6 @@ export const resumeAgentChat = async (req, res) => {
     });
   }
 };
+
+
+
